@@ -1,139 +1,217 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useApplicationStore } from "@/lib/store"
+import { Progress } from "@/components/ui/progress"
+import { motion } from "framer-motion"
+import { Loader2, Calendar as CalendarIcon, Clock } from "lucide-react"
+import { Formik, Form, Field, ErrorMessage } from "formik"
+import * as Yup from "yup"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
+
+const validationSchema = Yup.object().shape({
+  tourDate: Yup.date()
+    .required("Tour date is required"),
+  tourTime: Yup.string()
+    .required("Tour time is required")
+})
 
 export default function Step4() {
   const router = useRouter()
-  const { formData, setFormData } = useApplicationStore()
+  const { formData, updateFormData } = useApplicationStore()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [tourDateDescription, setTourDateDescription] = useState("")
+  const [minDate, setMinDate] = useState<Date | undefined>(undefined)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    router.push("/apply/confirmation")
-  }
+  useEffect(() => {
+    // Load settings from localStorage
+    const savedSettings = localStorage.getItem("applicationSettings")
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings)
+      setTourDateDescription(settings.tourDateDescription || "The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.")
+      
+      // Extract date from description
+      const dateMatch = settings.tourDateDescription?.match(/expires on ([A-Za-z]+ \d{1,2}, \d{4})/)
+      if (dateMatch) {
+        const expiryDate = new Date(dateMatch[1])
+        // Set minimum date to the day after expiry
+        const nextDay = new Date(expiryDate)
+        nextDay.setDate(nextDay.getDate() + 1)
+        setMinDate(nextDay)
+      } else {
+        // Default to tomorrow if no date found
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        setMinDate(tomorrow)
+      }
+    }
+  }, [])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null
-    setFormData({ receiptFile: file })
+  const handleSubmit = async (values: any, { resetForm }: { resetForm: () => void }) => {
+    setIsSubmitting(true)
+    try {
+      // Update store with step 4 data
+      updateFormData(values)
+      
+      // Reset form fields
+      resetForm()
+      
+      // Navigate to next step
+      router.push("/apply/step5")
+    } catch (error) {
+      console.error("Error submitting form:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <div className="container max-w-2xl py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Information</CardTitle>
-          <CardDescription>
-            Please select your payment method and upload your payment receipt.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Application Fee</h3>
-              <p className="text-sm text-gray-500">
-                A non-refundable application fee of $50 is required. This fee covers the cost of processing your application and conducting background checks.
-              </p>
-            </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Tour Schedule</h1>
+          <p className="text-slate-600">Step 4 of 5</p>
+          <Progress value={80} className="mt-4" />
+        </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Payment Method</h3>
-              <RadioGroup
-                value={formData.paymentMethod}
-                onValueChange={(value) => setFormData({ paymentMethod: value })}
-                required
-              >
-                <div className="grid gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="credit" id="credit" />
-                    <Label htmlFor="credit">Credit Card</Label>
+        <Formik
+          initialValues={{
+            tourDate: formData.tourDate ? new Date(formData.tourDate) : null,
+            tourTime: formData.tourTime || ""
+          }}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+          enableReinitialize={false}
+        >
+          {({ errors, touched, setFieldValue, values }) => (
+            <Form className="space-y-8">
+              <Card className="shadow-sm border border-slate-200">
+                <CardHeader className="bg-white border-b border-slate-200">
+                  <CardTitle className="text-xl text-slate-900">Tour Schedule</CardTitle>
+                  <CardDescription className="text-slate-600">
+                    Select your preferred date and time for the property tour
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="p-6 space-y-8">
+                  <div className="space-y-6">
+                    <div className="border-b border-slate-200 pb-2">
+                      <h3 className="text-lg font-semibold text-slate-900">Tour Schedule</h3>
+                      <p className="text-sm text-slate-600">Select your preferred date and time for the property tour</p>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-slate-900">Tour Date Selection</h3>
+                      {tourDateDescription && (
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                          <p className="text-sm text-blue-700">{tourDateDescription}</p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="tourDate" className="text-slate-700 flex items-center gap-2">
+                            <CalendarIcon className="h-4 w-4" />
+                            Tour Date *
+                          </Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !values.tourDate && "text-slate-500"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {values.tourDate ? format(values.tourDate, "PPP") : "Select a date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={values.tourDate || undefined}
+                                onSelect={(date) => setFieldValue("tourDate", date)}
+                                disabled={(date) => {
+                                  if (!minDate) return false
+                                  return date < minDate
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <ErrorMessage
+                            name="tourDate"
+                            component="p"
+                            className="text-sm text-red-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="tourTime" className="text-slate-700 flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            Tour Time *
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="tourTime"
+                            name="tourTime"
+                            type="time"
+                            className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
+                              errors.tourTime && touched.tourTime ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+                            }`}
+                          />
+                          <ErrorMessage
+                            name="tourTime"
+                            component="p"
+                            className="text-sm text-red-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="debit" id="debit" />
-                    <Label htmlFor="debit">Debit Card</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="bank" id="bank" />
-                    <Label htmlFor="bank">Bank Transfer</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="zelle" id="zelle" />
-                    <Label htmlFor="zelle">Zelle</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cashapp" id="cashapp" />
-                    <Label htmlFor="cashapp">Cash App</Label>
+                </CardContent>
+                <div className="p-6 border-t border-slate-200">
+                  <div className="flex justify-between">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.push("/apply/step3")}
+                      className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-slate-900 hover:bg-slate-800 text-white min-w-[120px]"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Next...
+                        </>
+                      ) : (
+                        "Next"
+                      )}
+                    </Button>
                   </div>
                 </div>
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Payment Instructions</h3>
-              <div className="rounded-lg border p-4">
-                <p className="text-sm">
-                  {formData.paymentMethod === "zelle" && (
-                    <>
-                      Please send your payment to:<br />
-                      Email: payments@example.com<br />
-                      Name: Property Management LLC
-                    </>
-                  )}
-                  {formData.paymentMethod === "cashapp" && (
-                    <>
-                      Please send your payment to:<br />
-                      $PropertyManagementLLC
-                    </>
-                  )}
-                  {formData.paymentMethod === "bank" && (
-                    <>
-                      Please send your payment to:<br />
-                      Bank: Example Bank<br />
-                      Account Number: 1234567890<br />
-                      Routing Number: 987654321
-                    </>
-                  )}
-                  {!["zelle", "cashapp", "bank"].includes(formData.paymentMethod) && (
-                    "Please proceed with your payment using the selected method."
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Upload Receipt</h3>
-              <div className="space-y-2">
-                <Label htmlFor="receipt">Payment Receipt</Label>
-                <input
-                  id="receipt"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileChange}
-                  required
-                  className="w-full"
-                />
-                <p className="text-sm text-gray-500">
-                  Please upload a screenshot or photo of your payment receipt. Accepted formats: PDF, JPG, PNG
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/apply/step3")}
-              >
-                Previous
-              </Button>
-              <Button type="submit">Submit Application</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+              </Card>
+            </Form>
+          )}
+        </Formik>
+      </div>
+    </motion.div>
   )
 } 

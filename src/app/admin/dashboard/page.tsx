@@ -13,6 +13,17 @@ interface Settings {
   zelleEmail: string
   zelleName: string
   cashAppTag: string
+  tourDateDescription: string
+  paymentInstructions: {
+    zelle: {
+      email: string
+      name: string
+    }
+    cashApp: {
+      cashtag: string
+    }
+    applicationFee: number
+  }
 }
 
 export default function AdminDashboard() {
@@ -22,6 +33,17 @@ export default function AdminDashboard() {
     zelleEmail: "",
     zelleName: "",
     cashAppTag: "",
+    tourDateDescription: "The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.",
+    paymentInstructions: {
+      zelle: {
+        email: "payments@example.com",
+        name: "Pinnacle Property Management"
+      },
+      cashApp: {
+        cashtag: "$PinnaclePropertyManagement"
+      },
+      applicationFee: 0
+    }
   })
   const [saved, setSaved] = useState(false)
 
@@ -36,13 +58,41 @@ export default function AdminDashboard() {
     // Load saved settings
     const savedSettings = localStorage.getItem("applicationSettings")
     if (savedSettings) {
-      setSettings(JSON.parse(savedSettings))
+      const parsedSettings = JSON.parse(savedSettings)
+      // Ensure paymentInstructions exists in the loaded settings
+      setSettings({
+        ...parsedSettings,
+        paymentInstructions: parsedSettings.paymentInstructions || {
+          zelle: {
+            email: "payments@example.com",
+            name: "Pinnacle Property Management"
+          },
+          cashApp: {
+            cashtag: "$PinnaclePropertyManagement"
+          },
+          applicationFee: 0
+        }
+      })
     }
   }, [router])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    localStorage.setItem("applicationSettings", JSON.stringify(settings))
+    // Ensure paymentInstructions is included when saving
+    const settingsToSave = {
+      ...settings,
+      paymentInstructions: settings.paymentInstructions || {
+        zelle: {
+          email: "payments@example.com",
+          name: "Pinnacle Property Management"
+        },
+        cashApp: {
+          cashtag: "$PinnaclePropertyManagement"
+        },
+        applicationFee: 0
+      }
+    }
+    localStorage.setItem("applicationSettings", JSON.stringify(settingsToSave))
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
@@ -89,48 +139,120 @@ export default function AdminDashboard() {
                     rows={3}
                   />
                 </div>
-              </div>
-
-              {/* Zelle Settings */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900">Zelle Payment Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="zelleEmail" className="text-slate-700">Zelle Email</Label>
-                    <Input
-                      id="zelleEmail"
-                      type="email"
-                      value={settings.zelleEmail}
-                      onChange={(e) => setSettings({ ...settings, zelleEmail: e.target.value })}
-                      placeholder="Enter Zelle email"
-                      className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zelleName" className="text-slate-700">Zelle Name</Label>
-                    <Input
-                      id="zelleName"
-                      value={settings.zelleName}
-                      onChange={(e) => setSettings({ ...settings, zelleName: e.target.value })}
-                      placeholder="Enter Zelle name"
-                      className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tourDateDescription" className="text-slate-700">Tour Date Description</Label>
+                  <Textarea
+                    id="tourDateDescription"
+                    value={settings.tourDateDescription}
+                    onChange={(e) => setSettings({ ...settings, tourDateDescription: e.target.value })}
+                    placeholder="Enter the description for tour date selection"
+                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                    rows={3}
+                  />
                 </div>
               </div>
 
-              {/* Cash App Settings */}
+              {/* Payment Settings */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900">Cash App Settings</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="cashAppTag" className="text-slate-700">Cash App $Cashtag</Label>
-                  <Input
-                    id="cashAppTag"
-                    value={settings.cashAppTag}
-                    onChange={(e) => setSettings({ ...settings, cashAppTag: e.target.value })}
-                    placeholder="Enter Cash App $Cashtag"
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                  />
+                <h3 className="font-semibold text-slate-900">Payment Settings</h3>
+                <div className="space-y-6">
+                  {/* Application Fee */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-slate-700">Application Fee</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="applicationFee" className="text-slate-700">Application Fee Amount ($)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                        <Input
+                          id="applicationFee"
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={settings.paymentInstructions.applicationFee}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            paymentInstructions: {
+                              ...settings.paymentInstructions,
+                              applicationFee: parseInt(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="Enter application fee amount"
+                          className="pl-7 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Zelle Settings */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-slate-700">Zelle Payment Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="zellePaymentEmail" className="text-slate-700">Zelle Email</Label>
+                        <Input
+                          id="zellePaymentEmail"
+                          type="email"
+                          value={settings.paymentInstructions.zelle.email}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            paymentInstructions: {
+                              ...settings.paymentInstructions,
+                              zelle: {
+                                ...settings.paymentInstructions.zelle,
+                                email: e.target.value
+                              }
+                            }
+                          })}
+                          placeholder="Enter Zelle payment email"
+                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="zellePaymentName" className="text-slate-700">Zelle Name</Label>
+                        <Input
+                          id="zellePaymentName"
+                          type="text"
+                          value={settings.paymentInstructions.zelle.name}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            paymentInstructions: {
+                              ...settings.paymentInstructions,
+                              zelle: {
+                                ...settings.paymentInstructions.zelle,
+                                name: e.target.value
+                              }
+                            }
+                          })}
+                          placeholder="Enter Zelle payment name"
+                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cash App Settings */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-slate-700">Cash App Payment Information</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="cashAppCashtag" className="text-slate-700">Cash App $Cashtag</Label>
+                      <Input
+                        id="cashAppCashtag"
+                        value={settings.paymentInstructions.cashApp.cashtag}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          paymentInstructions: {
+                            ...settings.paymentInstructions,
+                            cashApp: {
+                              ...settings.paymentInstructions.cashApp,
+                              cashtag: e.target.value
+                            }
+                          }
+                        })}
+                        placeholder="Enter Cash App $Cashtag"
+                        className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
