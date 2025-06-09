@@ -2,136 +2,98 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { motion } from "framer-motion"
-import { Formik, Form, Field, ErrorMessage } from "formik"
-import * as Yup from "yup"
-
-const validationSchema = Yup.object().shape({
-  email: Yup.string()
-    .email("Please enter a valid email")
-    .required("Email is required"),
-  password: Yup.string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters")
-})
-
-// Hardcoded credentials
-const ADMIN_EMAIL = "admin@example.com"
-const ADMIN_PASSWORD = "admin123456"
 
 export default function AdminLogin() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  })
   const [error, setError] = useState("")
 
-  const handleSubmit = async (values: any) => {
-    setIsSubmitting(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setError("")
+
     try {
-      // Check credentials
-      if (values.email === ADMIN_EMAIL && values.password === ADMIN_PASSWORD) {
-        // Set authentication state
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        // Store authentication state
         localStorage.setItem("adminAuthenticated", "true")
-        // Redirect to dashboard
         router.push("/admin/dashboard")
       } else {
-        setError("Invalid email or password")
+        const data = await response.json()
+        setError(data.message || "Invalid credentials")
       }
-    } catch (error) {
-      console.error("Error logging in:", error)
+    } catch (err) {
       setError("An error occurred during login")
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card className="shadow-sm border border-slate-200">
-          <CardHeader className="bg-white border-b border-slate-200">
-            <CardTitle className="text-xl text-slate-900">Admin Login</CardTitle>
-            <CardDescription className="text-slate-600">
-              Sign in to access the admin dashboard
-            </CardDescription>
-          </CardHeader>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Admin Login
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+            </div>
+          </div>
 
-          <CardContent className="p-6">
-            <Formik
-              initialValues={{
-                email: "",
-                password: ""
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleSubmit}
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              {({ errors, touched }) => (
-                <Form className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-slate-700">Email Address</Label>
-                      <Field
-                        as={Input}
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
-                          errors.email && touched.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
-                        }`}
-                      />
-                      <ErrorMessage
-                        name="email"
-                        component="p"
-                        className="text-sm text-red-500"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-slate-700">Password</Label>
-                      <Field
-                        as={Input}
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="Enter your password"
-                        className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
-                          errors.password && touched.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
-                        }`}
-                      />
-                      <ErrorMessage
-                        name="password"
-                        component="p"
-                        className="text-sm text-red-500"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Signing in..." : "Sign In"}
-                  </Button>
-                  {error && (
-                    <p className="text-sm text-red-500 mt-2 text-center">{error}</p>
-                  )}
-                </Form>
-              )}
-            </Formik>
-          </CardContent>
-        </Card>
-      </motion.div>
+              Sign in
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 } 

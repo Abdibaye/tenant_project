@@ -69,8 +69,12 @@ export default function Step5() {
   const handleSubmit = async (values: any, { resetForm }: { resetForm: () => void }) => {
     setIsSubmitting(true)
     try {
+      console.log('Starting form submission...')
+      
       // Convert file to base64
       const file = values.paymentReceipt;
+      console.log('Processing payment receipt:', file?.name)
+      
       const reader = new FileReader();
       
       const fileData = await new Promise((resolve, reject) => {
@@ -85,6 +89,7 @@ export default function Step5() {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+      console.log('Payment receipt processed successfully')
 
       // Update store with final step data including payment method and receipt
       const finalFormData = {
@@ -93,9 +98,10 @@ export default function Step5() {
         paymentMethod: values.paymentMethod,
         paymentReceipt: fileData
       }
-      setFormData(finalFormData)
+      console.log('Final form data prepared:', { ...finalFormData, paymentReceipt: 'BASE64_DATA' })
       
       // Send email with all form data
+      console.log('Sending email...')
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
@@ -105,6 +111,7 @@ export default function Step5() {
       })
 
       const data = await response.json()
+      console.log('Email response:', data)
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send email')
@@ -116,12 +123,15 @@ export default function Step5() {
 
       // Clear all form data from store
       clearFormData()
+      console.log('Form data cleared from store')
       
       // Reset form fields
       resetForm()
+      console.log('Form fields reset')
 
       // Navigate to confirmation page
       router.push("/apply/confirmation")
+      console.log('Redirected to confirmation page')
     } catch (error) {
       console.error("Error submitting form:", error)
       alert(error instanceof Error ? error.message : 'Failed to submit application. Please try again.')

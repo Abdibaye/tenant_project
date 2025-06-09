@@ -1,11 +1,45 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+if (!process.env.ZOHO_EMAIL || !process.env.ZOHO_APP_PASSWORD) {
+  throw new Error('Missing required environment variables for email configuration')
+}
+
+// Create a transporter using Zoho SMTP
+const transporter = nodemailer.createTransport({
+  host: 'smtp.zoho.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.ZOHO_EMAIL,
+    pass: process.env.ZOHO_APP_PASSWORD
+  }
+})
 
 // Function to generate a random 8-digit code
 function generateAccessCode(): string {
   return Math.floor(10000000 + Math.random() * 90000000).toString()
+}
+
+// Common email headers to prevent spam
+const commonHeaders = {
+  'X-Entity-Ref-ID': Date.now().toString(),
+  'List-Unsubscribe': `<mailto:${process.env.ZOHO_EMAIL}?subject=unsubscribe>`,
+  'Precedence': 'bulk',
+  'X-Auto-Response-Suppress': 'OOF, AutoReply',
+  'X-MS-Exchange-CrossTenant-FromEntityHeader': 'Hosted',
+  'X-MS-Exchange-Organization-AuthSource': process.env.EMAIL_DOMAIN || 'yourdomain.com',
+  'X-MS-Exchange-Organization-AuthAs': 'Internal',
+  'X-MS-Exchange-Organization-AuthMechanism': '04',
+  'X-MS-Exchange-Organization-Network-Message-Id': Date.now().toString(),
+  'X-MS-Exchange-Organization-SCL': '0'
+}
+
+// Define attachment type
+interface Attachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
 }
 
 export async function POST(request: Request) {
@@ -14,21 +48,36 @@ export async function POST(request: Request) {
     const accessCode = generateAccessCode()
 
     // Prepare attachments if payment receipt exists
-    const attachments = formData.paymentReceipt ? [
-      {
-        filename: formData.paymentReceipt.name,
-        content: formData.paymentReceipt.content,
-        contentType: formData.paymentReceipt.type
-      }
-    ] : []
+    let attachments: Attachment[] = []
+    if (formData.paymentReceipt) {
+      try {
+        // Ensure the content is properly formatted
+        const content = formData.paymentReceipt.content
+        if (!content) {
+          throw new Error('Payment receipt content is missing')
+        }
 
-    // 1. Send application data to user
+        // Create attachment object
+        attachments = [{
+          filename: formData.paymentReceipt.name,
+          content: Buffer.from(content, 'base64'),
+          contentType: formData.paymentReceipt.type || 'application/octet-stream'
+        }]
+      } catch (error) {
+        throw new Error('Failed to process payment receipt attachment')
+      }
+    }
+
+    // 1. Send application data to admin
     const userApplicationEmail = {
-      from: 'Property Management <onboarding@resend.dev>',
-      to: process.env.EMAIL_USER || 'abdibaye0902@example.com',
-      subject: 'Your Rental Application Details',
+      from: `"Pinnacle Property Management" <${process.env.ZOHO_EMAIL}>`,
+      to: process.env.EMAIL_USER,
+      subject: 'New Rental Application Received',
+      headers: commonHeaders,
       text: `
-        Your Rental Application Details
+        New Rental Application Received
+
+        A new application has been received from ${formData.fullName}.
 
         Personal Information:
         - Full Name: ${formData.fullName || 'Not provided'}
@@ -58,10 +107,11 @@ export async function POST(request: Request) {
         - Tour Date: ${formData.tourDate || 'Not provided'}
         - Tour Time: ${formData.tourTime || 'Not provided'}
         - Payment Method: ${formData.paymentMethod || 'Not provided'}
+        ${formData.paymentReceipt ? '- Payment Receipt: Attached' : ''}
       `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1e293b;">Your Rental Application Details</h2>
+          <h2 style="color: #1e293b;">New Rental Application</h2>
           
           <div style="margin: 20px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
             <h3 style="color: #334155;">Personal Information</h3>
@@ -105,17 +155,20 @@ export async function POST(request: Request) {
               <li><strong>Tour Date:</strong> ${formData.tourDate || 'Not provided'}</li>
               <li><strong>Tour Time:</strong> ${formData.tourTime || 'Not provided'}</li>
               <li><strong>Payment Method:</strong> ${formData.paymentMethod || 'Not provided'}</li>
+              ${formData.paymentReceipt ? `<li><strong>Payment Receipt:</strong> Attached</li>` : ''}
             </ul>
           </div>
         </div>
-      `
+      `,
+      attachments
     }
 
     // 2. Send confirmation with access code to user
     const userConfirmationEmail = {
-      from: 'Property Management <onboarding@resend.dev>',
+      from: `"Pinnacle Property Management" <${process.env.ZOHO_EMAIL}>`,
       to: formData.email,
       subject: 'Application Confirmation and Access Code',
+      headers: commonHeaders,
       text: `
         Application Confirmation
 
@@ -125,7 +178,7 @@ export async function POST(request: Request) {
 
         Your unique access code is: ${accessCode}
 
-        For faster processing, please send the following documents to rentals@example.com:
+        For faster processing, please send the following documents to info@pprmgt.com:
         - Last 3 months' paystubs
         - Any valid government ID
 
@@ -159,7 +212,7 @@ export async function POST(request: Request) {
           <div style="margin: 20px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
             <h3 style="color: #334155; margin-bottom: 15px;">Required Documents</h3>
             <p style="color: #334155; font-size: 16px; line-height: 1.6;">
-              For faster processing, please send the following documents to <a href="mailto:rentals@example.com" style="color: #2563eb;">rentals@example.com</a>:
+              For faster processing, please send the following documents to <a href="mailto:info@pprmgt.com" style="color: #2563eb;">info@pprmgt.com</a>:
             </p>
             <ul style="color: #334155; font-size: 16px; line-height: 1.6; padding-left: 20px;">
               <li>Last 3 months' paystubs</li>
@@ -190,17 +243,16 @@ export async function POST(request: Request) {
 
     // Send both emails
     const [userAppEmail, userConfEmail] = await Promise.all([
-      resend.emails.send(userApplicationEmail),
-      resend.emails.send(userConfirmationEmail)
+      transporter.sendMail(userApplicationEmail),
+      transporter.sendMail(userConfirmationEmail)
     ])
 
-    if (userAppEmail.error || userConfEmail.error) {
-      console.error('Error sending emails:', userAppEmail.error || userConfEmail.error)
+    if (!userAppEmail.messageId || !userConfEmail.messageId) {
       return NextResponse.json(
         { 
           success: false, 
           message: 'Failed to send emails',
-          error: (userAppEmail.error || userConfEmail.error)?.message 
+          error: 'Email sending failed'
         },
         { status: 500 }
       )
@@ -210,13 +262,12 @@ export async function POST(request: Request) {
       success: true, 
       message: 'Emails sent successfully',
       messageIds: {
-        userApplication: userAppEmail.data?.id,
-        userConfirmation: userConfEmail.data?.id
+        userApplication: userAppEmail.messageId,
+        userConfirmation: userConfEmail.messageId
       },
       accessCode 
     })
   } catch (error) {
-    console.error('Error sending emails:', error)
     return NextResponse.json(
       { 
         success: false, 

@@ -46,6 +46,14 @@ export default function AdminDashboard() {
     }
   })
   const [saved, setSaved] = useState(false)
+  const [credentialsForm, setCredentialsForm] = useState({
+    currentEmail: "",
+    newEmail: "",
+    currentPassword: "",
+    newPassword: ""
+  })
+  const [credentialsMessage, setCredentialsMessage] = useState("")
+  const [credentialsError, setCredentialsError] = useState("")
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -97,6 +105,38 @@ export default function AdminDashboard() {
     setTimeout(() => setSaved(false), 3000)
   }
 
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCredentialsMessage("")
+    setCredentialsError("")
+
+    try {
+      const response = await fetch("/api/admin/update-credentials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentialsForm),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setCredentialsMessage("Credentials updated successfully")
+        setCredentialsForm({
+          currentEmail: "",
+          newEmail: "",
+          currentPassword: "",
+          newPassword: ""
+        })
+      } else {
+        setCredentialsError(data.message || "Failed to update credentials")
+      }
+    } catch (err) {
+      setCredentialsError("An error occurred while updating credentials")
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem("adminAuthenticated")
     router.push("/admin/login")
@@ -116,6 +156,85 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
+        {/* Admin Credentials Card */}
+        <Card className="shadow-sm border border-slate-200 mb-8">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="text-xl text-slate-900">Admin Credentials</CardTitle>
+            <CardDescription className="text-slate-600">
+              Update your admin email and password
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+              {credentialsMessage && (
+                <div className="p-4 bg-green-50 text-green-700 rounded-md">
+                  {credentialsMessage}
+                </div>
+              )}
+              {credentialsError && (
+                <div className="p-4 bg-red-50 text-red-700 rounded-md">
+                  {credentialsError}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentEmail" className="text-slate-700">Current Email</Label>
+                  <Input
+                    id="currentEmail"
+                    type="email"
+                    value={credentialsForm.currentEmail}
+                    onChange={(e) => setCredentialsForm({ ...credentialsForm, currentEmail: e.target.value })}
+                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newEmail" className="text-slate-700">New Email</Label>
+                  <Input
+                    id="newEmail"
+                    type="email"
+                    value={credentialsForm.newEmail}
+                    onChange={(e) => setCredentialsForm({ ...credentialsForm, newEmail: e.target.value })}
+                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword" className="text-slate-700">Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={credentialsForm.currentPassword}
+                    onChange={(e) => setCredentialsForm({ ...credentialsForm, currentPassword: e.target.value })}
+                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-slate-700">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={credentialsForm.newPassword}
+                    onChange={(e) => setCredentialsForm({ ...credentialsForm, newPassword: e.target.value })}
+                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  className="bg-slate-900 hover:bg-slate-800 text-white"
+                >
+                  Update Credentials
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Application Settings Card */}
         <Card className="shadow-sm border border-slate-200">
           <CardHeader className="bg-white border-b border-slate-200">
             <CardTitle className="text-xl text-slate-900">Application Settings</CardTitle>
