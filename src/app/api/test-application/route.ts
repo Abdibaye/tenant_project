@@ -12,6 +12,9 @@ const transporter = nodemailer.createTransport({
   }
 })
 
+export const dynamic = 'force-static'
+export const revalidate = 3600 // revalidate every hour
+
 export async function GET() {
   try {
     // Test application data

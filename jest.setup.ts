@@ -1,5 +1,7 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import { ImageProps } from 'next/image'
+import React from 'react'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -15,10 +17,13 @@ jest.mock('next/navigation', () => ({
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props) => {
-    // eslint-disable-next-line jsx-a11y/alt-text
-    return <img {...props} />
-  },
+  default: function Image({ src, alt, ...props }: any) {
+    return {
+      src,
+      alt,
+      ...props
+    }
+  }
 }))
 
 // Extend expect matchers
