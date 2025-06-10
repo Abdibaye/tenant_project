@@ -35,25 +35,53 @@ export default function Step4() {
     // Load settings from localStorage
     const savedSettings = localStorage.getItem("applicationSettings")
     if (savedSettings) {
-      const settings = JSON.parse(savedSettings)
-      setTourDateDescription(settings.tourDateDescription || "The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.")
-      
-      // Extract date from description
-      const dateMatch = settings.tourDateDescription?.match(/expires on ([A-Za-z]+ \d{1,2}, \d{4})/)
-      if (dateMatch) {
-        const expiryDate = new Date(dateMatch[1])
-        // Set minimum date to the day after expiry
-        const nextDay = new Date(expiryDate)
-        nextDay.setDate(nextDay.getDate() + 1)
-        setMinDate(nextDay)
-      } else {
-        // Default to tomorrow if no date found
-        const tomorrow = new Date()
-        tomorrow.setDate(tomorrow.getDate() + 1)
-        setMinDate(tomorrow)
+      try {
+        const settings = JSON.parse(savedSettings)
+        // Set the tour date description with a default value if not found
+        const description = settings.tourDateDescription || "The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date."
+        setTourDateDescription(description)
+        
+        // Extract date from description using a more robust regex
+        const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2}, \d{4})/i)
+        if (dateMatch) {
+          try {
+            const expiryDate = new Date(dateMatch[1])
+            if (!isNaN(expiryDate.getTime())) {
+              // Set minimum date to the day after expiry
+              const nextDay = new Date(expiryDate)
+              nextDay.setDate(nextDay.getDate() + 1)
+              setMinDate(nextDay)
+            } else {
+              // If date parsing fails, set to tomorrow
+              setDefaultMinDate()
+            }
+          } catch (error) {
+            console.error("Error parsing date:", error)
+            setDefaultMinDate()
+          }
+        } else {
+          // If no date found in description, set to tomorrow
+          setDefaultMinDate()
+        }
+      } catch (error) {
+        console.error("Error parsing settings:", error)
+        // Set default values if there's an error
+        setTourDateDescription("The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.")
+        setDefaultMinDate()
       }
+    } else {
+      // Set default values if no settings found
+      setTourDateDescription("The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.")
+      setDefaultMinDate()
     }
   }, [])
+
+  // Helper function to set default minimum date (tomorrow)
+  const setDefaultMinDate = () => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    setMinDate(tomorrow)
+  }
 
   const handleSubmit = async (values: any, { resetForm }: { resetForm: () => void }) => {
     setIsSubmitting(true)
@@ -114,7 +142,8 @@ export default function Step4() {
                     <div className="space-y-4">
                       <h3 className="font-semibold text-slate-900">Tour Date Selection</h3>
                       {tourDateDescription && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <h4 className="font-semibold text-blue-900 mb-2">Tour Date Information</h4>
                           <p className="text-sm text-blue-700">{tourDateDescription}</p>
                         </div>
                       )}

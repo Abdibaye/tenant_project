@@ -35,6 +35,7 @@ export default function Step5() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentInfo, setPaymentInfo] = useState({
     applicationFee: 200,
+    refundAmount: 150,
     zelle: {
       email: "payments@example.com",
       name: "Pinnacle Property Management"
@@ -48,21 +49,26 @@ export default function Step5() {
     // Load settings from localStorage
     const savedSettings = localStorage.getItem("applicationSettings")
     if (savedSettings) {
-      const settings = JSON.parse(savedSettings)
-      
-      // Ensure payment instructions exist with default values
-      const defaultPaymentInfo = {
-        applicationFee: 200,
-        zelle: {
-          email: "payments@example.com",
-          name: "Pinnacle Property Management"
-        },
-        cashApp: {
-          cashtag: "$PinnaclePropertyManagement"
+      try {
+        const settings = JSON.parse(savedSettings)
+        
+        // Ensure payment instructions exist with default values
+        const defaultPaymentInfo = {
+          applicationFee: 200,
+          refundAmount: 150,
+          zelle: {
+            email: "payments@example.com",
+            name: "Pinnacle Property Management"
+          },
+          cashApp: {
+            cashtag: "$PinnaclePropertyManagement"
+          }
         }
+        
+        setPaymentInfo(settings.paymentInstructions || defaultPaymentInfo)
+      } catch (error) {
+        console.error("Error parsing settings:", error)
       }
-      
-      setPaymentInfo(settings.paymentInstructions || defaultPaymentInfo)
     }
   }, [])
 
@@ -185,7 +191,7 @@ export default function Step5() {
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <p className="text-sm text-blue-700">
-                          If your application is denied, a refund of $150 will be issued to you via the same payment method you used.
+                          If your application is denied, a refund of ${paymentInfo.refundAmount} will be issued to you via the same payment method you used.
                         </p>
                       </div>
                     </div>

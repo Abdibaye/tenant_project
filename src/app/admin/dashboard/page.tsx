@@ -23,6 +23,7 @@ interface Settings {
       cashtag: string
     }
     applicationFee: number
+    refundAmount: number
   }
 }
 
@@ -42,7 +43,8 @@ export default function AdminDashboard() {
       cashApp: {
         cashtag: "$PinnaclePropertyManagement"
       },
-      applicationFee: 0
+      applicationFee: 0,
+      refundAmount: 150
     }
   })
   const [saved, setSaved] = useState(false)
@@ -78,7 +80,8 @@ export default function AdminDashboard() {
           cashApp: {
             cashtag: "$PinnaclePropertyManagement"
           },
-          applicationFee: 0
+          applicationFee: 0,
+          refundAmount: 150
         }
       })
     }
@@ -97,7 +100,8 @@ export default function AdminDashboard() {
         cashApp: {
           cashtag: "$PinnaclePropertyManagement"
         },
-        applicationFee: 0
+        applicationFee: 0,
+        refundAmount: 150
       }
     }
     localStorage.setItem("applicationSettings", JSON.stringify(settingsToSave))
@@ -299,6 +303,34 @@ export default function AdminDashboard() {
                           className="pl-7 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
                         />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Refund Amount */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-slate-700">Refund Amount</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="refundAmount" className="text-slate-700">Refund Amount ($)</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                        <Input
+                          id="refundAmount"
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={settings.paymentInstructions.refundAmount}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            paymentInstructions: {
+                              ...settings.paymentInstructions,
+                              refundAmount: parseInt(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="Enter refund amount"
+                          className="pl-7 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                        />
+                      </div>
+                      <p className="text-sm text-slate-500">Amount to be refunded if application is denied</p>
                     </div>
                   </div>
 

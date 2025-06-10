@@ -98,7 +98,7 @@ export default function Step1() {
                         as={Input}
                         id="apartmentAddress"
                         name="apartmentAddress"
-                        placeholder="Enter the address of the apartment you want to apply for"
+                        placeholder="Apartment you are applying for"
                         className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
                           errors.apartmentAddress && touched.apartmentAddress ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
                         }`}
