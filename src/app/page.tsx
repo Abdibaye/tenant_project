@@ -57,12 +57,14 @@ export default function LandingPage() {
             <p className="text-xl md:text-2xl text-slate-200 mb-8 max-w-3xl mx-auto">
               Experience luxury living with our premium properties and seamless application process.
             </p>
-            <Button
-              onClick={() => router.push('/apply/step1')}
-              className="bg-white text-slate-900 hover:bg-slate-100 text-lg px-8 py-6"
-            >
-              Start your application & schedule your tour
-            </Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button
+                onClick={() => router.push('/apply/step1')}
+                className="bg-white text-slate-900 hover:bg-slate-100 text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
+              >
+                Start your application & schedule your tour
+              </Button>
+            </div>
           </div>
         </div>
       </div>

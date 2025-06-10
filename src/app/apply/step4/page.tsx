@@ -124,32 +124,16 @@ export default function Step4() {
                             <CalendarIcon className="h-4 w-4" />
                             Tour Date *
                           </Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !values.tourDate && "text-slate-500"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {values.tourDate ? format(values.tourDate, "PPP") : "Select a date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={values.tourDate || undefined}
-                                onSelect={(date) => setFieldValue("tourDate", date)}
-                                disabled={(date) => {
-                                  if (!minDate) return false
-                                  return date < minDate
-                                }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <Field
+                            as={Input}
+                            id="tourDate"
+                            name="tourDate"
+                            type="date"
+                            min={minDate?.toISOString().split('T')[0]}
+                            className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
+                              errors.tourDate && touched.tourDate ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+                            }`}
+                          />
                           <ErrorMessage
                             name="tourDate"
                             component="p"

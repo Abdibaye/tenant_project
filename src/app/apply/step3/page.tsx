@@ -183,29 +183,16 @@ export default function Step3() {
                           <CalendarIcon className="h-4 w-4" />
                           When can you move in? *
                         </Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !values.moveInDate && "text-slate-500"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {values.moveInDate ? format(new Date(values.moveInDate), "PPP") : "Select a date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={values.moveInDate ? new Date(values.moveInDate) : undefined}
-                              onSelect={(date) => setFieldValue("moveInDate", date?.toISOString().split('T')[0])}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <Field
+                          as={Input}
+                          id="moveInDate"
+                          name="moveInDate"
+                          type="date"
+                          min={new Date().toISOString().split('T')[0]}
+                          className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
+                            errors.moveInDate && touched.moveInDate ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+                          }`}
+                        />
                         <ErrorMessage
                           name="moveInDate"
                           component="p"

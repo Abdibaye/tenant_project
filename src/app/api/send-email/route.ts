@@ -79,6 +79,9 @@ export async function POST(request: Request) {
 
         A new application has been received from ${formData.fullName}.
 
+        Property Information:
+        - Apartment Address: ${formData.apartmentAddress || 'Not provided'}
+
         Personal Information:
         - Full Name: ${formData.fullName || 'Not provided'}
         - Email: ${formData.email || 'Not provided'}
@@ -113,6 +116,13 @@ export async function POST(request: Request) {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1e293b;">New Rental Application</h2>
           
+          <div style="margin: 20px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
+            <h3 style="color: #334155;">Property Information</h3>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Apartment Address:</strong> ${formData.apartmentAddress || 'Not provided'}</li>
+            </ul>
+          </div>
+
           <div style="margin: 20px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
             <h3 style="color: #334155;">Personal Information</h3>
             <ul style="list-style: none; padding: 0;">

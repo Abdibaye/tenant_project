@@ -14,6 +14,9 @@ import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 
 const validationSchema = Yup.object().shape({
+  apartmentAddress: Yup.string()
+    .required("Apartment address is required")
+    .min(5, "Address must be at least 5 characters"),
   fullName: Yup.string()
     .required("Full name is required")
     .min(2, "Full name must be at least 2 characters"),
@@ -76,6 +79,7 @@ export default function Step1() {
           <CardContent className="p-6">
             <Formik
               initialValues={{
+                apartmentAddress: formData.apartmentAddress || "",
                 fullName: formData.fullName || "",
                 email: formData.email || "",
                 phoneNumber: formData.phoneNumber || "",
@@ -88,6 +92,24 @@ export default function Step1() {
               {({ errors, touched }) => (
                 <Form className="space-y-6">
                   <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="apartmentAddress" className="text-slate-700">Apartment Address *</Label>
+                      <Field
+                        as={Input}
+                        id="apartmentAddress"
+                        name="apartmentAddress"
+                        placeholder="Enter the address of the apartment you want to apply for"
+                        className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
+                          errors.apartmentAddress && touched.apartmentAddress ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+                        }`}
+                      />
+                      <ErrorMessage
+                        name="apartmentAddress"
+                        component="p"
+                        className="text-sm text-red-500"
+                      />
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="fullName" className="text-slate-700">Full Name *</Label>
                       <Field

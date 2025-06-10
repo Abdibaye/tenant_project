@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 
 interface FormData {
   // Step 1 - Basic Information
+  apartmentAddress: string
   fullName: string
   email: string
   phoneNumber: string
@@ -47,6 +48,7 @@ interface ApplicationStore {
 
 const initialFormData: FormData = {
   // Step 1
+  apartmentAddress: "",
   fullName: "",
   email: "",
   phoneNumber: "",
