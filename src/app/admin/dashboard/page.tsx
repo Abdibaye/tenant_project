@@ -37,11 +37,11 @@ export default function AdminDashboard() {
     tourDateDescription: "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.",
     paymentInstructions: {
       zelle: {
-        email: "payments@example.com",
-        name: "Pinnacle Property Management"
+        email: "Guywell90@yahoo.com",
+        name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
       },
       cashApp: {
-        cashtag: "$PinnaclePropertyManagement"
+        cashtag: "Coming soon"
       },
       applicationFee: 99,
       refundAmount: 75
@@ -74,11 +74,11 @@ export default function AdminDashboard() {
         ...parsedSettings,
         paymentInstructions: parsedSettings.paymentInstructions || {
           zelle: {
-            email: "payments@example.com",
-            name: "Pinnacle Property Management"
+            email: "Guywell90@yahoo.com",
+            name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
           },
           cashApp: {
-            cashtag: "$PinnaclePropertyManagement"
+            cashtag: "Coming soon"
           },
           applicationFee: 0,
           refundAmount: 150
@@ -94,11 +94,11 @@ export default function AdminDashboard() {
       ...settings,
       paymentInstructions: settings.paymentInstructions || {
         zelle: {
-          email: "payments@example.com",
-          name: "Pinnacle Property Management"
+          email: "Guywell90@yahoo.com",
+          name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
         },
         cashApp: {
-          cashtag: "$PinnaclePropertyManagement"
+          cashtag: "Coming soon"
         },
         applicationFee: 0,
         refundAmount: 150

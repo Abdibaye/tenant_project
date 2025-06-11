@@ -37,11 +37,11 @@ export default function Step5() {
     applicationFee: 99,
     refundAmount: 75,
     zelle: {
-      email: "payments@example.com",
-      name: "Pinnacle Property Management"
+      email: "Guywell90@yahoo.com",
+      name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
     },
     cashApp: {
-      cashtag: "$PinnaclePropertyManagement"
+      cashtag: "Coming soon"
     }
   })
 
@@ -57,11 +57,11 @@ export default function Step5() {
           applicationFee: 99,
           refundAmount: 75,
           zelle: {
-            email: "payments@example.com",
-            name: "Pinnacle Property Management"
+            email: "Guywell90@yahoo.com",
+            name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
           },
           cashApp: {
-            cashtag: "$PinnaclePropertyManagement"
+            cashtag: "Coming soon"
           }
         }
         
