@@ -58,7 +58,7 @@ export default function Confirmation() {
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <h3 className="font-semibold text-green-900 mb-2">Application Received</h3>
                   <p className="text-sm text-green-700">
-                    We have received your application and will begin processing it within 1-2 business days.
+                    We have received your application and will begin processing it within 1-3 business days.
                   </p>
                 </div>
 

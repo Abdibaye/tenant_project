@@ -34,7 +34,7 @@ export default function Confirmation() {
                     <div className="mt-2 flex items-start space-x-2 bg-yellow-50 p-3 rounded-md border border-yellow-200">
                       <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                       <p className="text-sm font-medium text-yellow-800">
-                        Please check both your inbox and spam folder for our confirmation email. If you don't receive it within a few minutes, please contact us.
+                        Please check both your inbox and spam folder for our confirmation email. If you don't receive it within a day, please contact us.
                       </p>
                     </div>
                   </div>
