@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     zelleEmail: "",
     zelleName: "",
     cashAppTag: "",
-    tourDateDescription: "The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.",
+    tourDateDescription: "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.",
     paymentInstructions: {
       zelle: {
         email: "payments@example.com",
@@ -43,8 +43,8 @@ export default function AdminDashboard() {
       cashApp: {
         cashtag: "$PinnaclePropertyManagement"
       },
-      applicationFee: 0,
-      refundAmount: 150
+      applicationFee: 99,
+      refundAmount: 75
     }
   })
   const [saved, setSaved] = useState(false)

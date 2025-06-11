@@ -34,8 +34,8 @@ export default function Step5() {
   const { formData, setFormData, clearFormData } = useApplicationStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentInfo, setPaymentInfo] = useState({
-    applicationFee: 200,
-    refundAmount: 150,
+    applicationFee: 99,
+    refundAmount: 75,
     zelle: {
       email: "payments@example.com",
       name: "Pinnacle Property Management"
@@ -54,8 +54,8 @@ export default function Step5() {
         
         // Ensure payment instructions exist with default values
         const defaultPaymentInfo = {
-          applicationFee: 200,
-          refundAmount: 150,
+          applicationFee: 99,
+          refundAmount: 75,
           zelle: {
             email: "payments@example.com",
             name: "Pinnacle Property Management"

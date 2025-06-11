@@ -32,7 +32,7 @@ interface FormData {
   hasConsent: string
 
   // Step 4 - Tour Schedule
-  tourDate: string
+  tourDate: string | null
   tourTime: string
 
   // Step 5 - Payment
@@ -78,7 +78,7 @@ const initialFormData: FormData = {
   hasConsent: "",
 
   // Step 4
-  tourDate: "",
+  tourDate: null,
   tourTime: "",
 
   // Step 5

@@ -38,11 +38,11 @@ export default function Step4() {
       try {
         const settings = JSON.parse(savedSettings)
         // Set the tour date description with a default value if not found
-        const description = settings.tourDateDescription || "The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date."
+        const description = settings.tourDateDescription || "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date."
         setTourDateDescription(description)
         
         // Extract date from description using a more robust regex
-        const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2}, \d{4})/i)
+        const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2})/i)
         if (dateMatch) {
           try {
             const expiryDate = new Date(dateMatch[1])
@@ -66,12 +66,12 @@ export default function Step4() {
       } catch (error) {
         console.error("Error parsing settings:", error)
         // Set default values if there's an error
-        setTourDateDescription("The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.")
+        setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
         setDefaultMinDate()
       }
     } else {
       // Set default values if no settings found
-      setTourDateDescription("The current tenant's lease expires on September 15, 2025. Kindly select a tour date after this date.")
+      setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
       setDefaultMinDate()
     }
   }, [])
