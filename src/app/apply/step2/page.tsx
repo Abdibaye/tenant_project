@@ -14,6 +14,7 @@ import { motion } from "framer-motion"
 import { Loader2 } from "lucide-react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const validationSchema = Yup.object().shape({
   monthlyIncome: Yup.number()
@@ -25,6 +26,8 @@ const validationSchema = Yup.object().shape({
   outstandingDebts: Yup.number()
     .required("Outstanding debts are required")
     .min(0, "Outstanding debts cannot be negative"),
+  creditScore: Yup.string()
+    .required("Credit score range is required"),
   missedRentPayments: Yup.string()
     .required("Please indicate if you have ever missed a rent payment"),
   landlordReferences: Yup.string()
@@ -76,6 +79,7 @@ export default function Step2() {
             monthlyIncome: formData.monthlyIncome || "",
             annualIncome: formData.annualIncome || "",
             outstandingDebts: formData.outstandingDebts || "",
+            creditScore: formData.creditScore || "",
             missedRentPayments: formData.missedRentPayments || "",
             landlordReferences: formData.landlordReferences || "",
             hasEvictionHistory: formData.hasEvictionHistory || "",
@@ -173,6 +177,32 @@ export default function Step2() {
                         </div>
                         <ErrorMessage
                           name="outstandingDebts"
+                          component="p"
+                          className="text-sm text-red-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="creditScore" className="text-slate-700">Credit Score Range *</Label>
+                        <Select
+                          value={values.creditScore}
+                          onValueChange={(value) => setFieldValue("creditScore", value)}
+                        >
+                          <SelectTrigger className={`w-full border-slate-200 focus:border-slate-400 focus:ring-slate-400 bg-white ${
+                            errors.creditScore && touched.creditScore ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+                          }`}>
+                            <SelectValue placeholder="Select your credit score range" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            <SelectItem value="excellent">Excellent (750-850)</SelectItem>
+                            <SelectItem value="very_good">Very Good (700-749)</SelectItem>
+                            <SelectItem value="good">Good (650-699)</SelectItem>
+                            <SelectItem value="fair">Fair (600-649)</SelectItem>
+                            <SelectItem value="poor">Poor (300-599)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <ErrorMessage
+                          name="creditScore"
                           component="p"
                           className="text-sm text-red-500"
                         />

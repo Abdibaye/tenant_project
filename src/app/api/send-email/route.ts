@@ -92,6 +92,7 @@ export async function POST(request: Request) {
         - Monthly Income: $${formData.monthlyIncome || 'Not provided'}
         - Annual Income: $${formData.annualIncome || 'Not provided'}
         - Outstanding Debts: $${formData.outstandingDebts || 'Not provided'}
+        - Credit Score Range: ${formData.creditScore || 'Not provided'}
         - Missed Rent Payments: ${formData.missedRentPayments || 'Not provided'}
         - Has Eviction History: ${formData.hasEvictionHistory || 'Not provided'}
         - Has Bankruptcy: ${formData.hasBankruptcy || 'Not provided'}
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
               <li><strong>Monthly Income:</strong> $${formData.monthlyIncome || 'Not provided'}</li>
               <li><strong>Annual Income:</strong> $${formData.annualIncome || 'Not provided'}</li>
               <li><strong>Outstanding Debts:</strong> $${formData.outstandingDebts || 'Not provided'}</li>
+              <li><strong>Credit Score Range:</strong> ${formData.creditScore || 'Not provided'}</li>
               <li><strong>Missed Rent Payments:</strong> ${formData.missedRentPayments || 'Not provided'}</li>
               <li><strong>Has Eviction History:</strong> ${formData.hasEvictionHistory || 'Not provided'}</li>
               <li><strong>Has Bankruptcy:</strong> ${formData.hasBankruptcy || 'Not provided'}</li>

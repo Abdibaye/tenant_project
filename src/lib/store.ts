@@ -13,6 +13,7 @@ interface FormData {
   monthlyIncome: string
   annualIncome: string
   outstandingDebts: string
+  creditScore: string
   missedRentPayments: string
   landlordReferences: string
   hasEvictionHistory: string
@@ -58,6 +59,7 @@ const initialFormData: FormData = {
   monthlyIncome: "",
   annualIncome: "",
   outstandingDebts: "",
+  creditScore: "",
   missedRentPayments: "",
   landlordReferences: "",
   hasEvictionHistory: "",
