@@ -1,9 +1,21 @@
 {
+  "/_not-found": "app/_not-found.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/api/admin/login/route": "app/api/admin/login/route.js",
+  "/api/admin/update-credentials/route": "app/api/admin/update-credentials/route.js",
+  "/api/debug-application/route": "app/api/debug-application/route.js",
+  "/api/debug-email/route": "app/api/debug-email/route.js",
+  "/api/send-email/route": "app/api/send-email/route.js",
+  "/api/test-email/route": "app/api/test-email/route.js",
+  "/api/test-env/route": "app/api/test-env/route.js",
+  "/apply/confirmation/page": "app/apply/confirmation/page.js",
   "/apply/step1/page": "app/apply/step1/page.js",
   "/apply/step2/page": "app/apply/step2/page.js",
   "/apply/step3/page": "app/apply/step3/page.js",
   "/apply/step4/page": "app/apply/step4/page.js",
   "/apply/step5/page": "app/apply/step5/page.js",
-  "/api/send-email/route": "app/api/send-email/route.js",
-  "/apply/confirmation/page": "app/apply/confirmation/page.js"
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/api/test-application/route": "app/api/test-application/route.js"
 }
