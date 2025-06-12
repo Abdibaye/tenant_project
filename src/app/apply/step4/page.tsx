@@ -98,12 +98,12 @@ export default function Step4() {
           initialValues={{
             tourDate: formData.tourDate
               ? new Date(formData.tourDate).toISOString().split("T")[0]
-              : "",
+              : minDate?.toISOString().split("T")[0] || "",
             tourTime: formData.tourTime || ""
           }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
-          enableReinitialize={false}
+          enableReinitialize={true}
         >
           {({ errors, touched }) => (
             <Form className="space-y-8">
