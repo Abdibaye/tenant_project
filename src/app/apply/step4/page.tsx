@@ -98,7 +98,9 @@ export default function Step4() {
           initialValues={{
             tourDate: formData.tourDate
               ? new Date(formData.tourDate).toISOString().split("T")[0]
-              : minDate?.toISOString().split("T")[0] || "",
+              : minDate
+                ? new Date(2025, minDate.getMonth(), minDate.getDate()).toISOString().split("T")[0]
+                : "",
             tourTime: formData.tourTime || ""
           }}
           validationSchema={validationSchema}
