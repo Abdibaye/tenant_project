@@ -12,16 +12,10 @@ import { motion } from "framer-motion"
 import { Loader2, Calendar as CalendarIcon, Clock } from "lucide-react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
 
 const validationSchema = Yup.object().shape({
-  tourDate: Yup.date()
-    .required("Tour date is required"),
-  tourTime: Yup.string()
-    .required("Tour time is required")
+  tourDate: Yup.string().required("Tour date is required"),
+  tourTime: Yup.string().required("Tour time is required")
 })
 
 export default function Step4() {
@@ -32,27 +26,22 @@ export default function Step4() {
   const [minDate, setMinDate] = useState<Date | undefined>(undefined)
 
   useEffect(() => {
-    // Load settings from localStorage
     const savedSettings = localStorage.getItem("applicationSettings")
     if (savedSettings) {
       try {
         const settings = JSON.parse(savedSettings)
-        // Set the tour date description with a default value if not found
         const description = settings.tourDateDescription || "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date."
         setTourDateDescription(description)
-        
-        // Extract date from description using a more robust regex
+
         const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2})/i)
         if (dateMatch) {
           try {
             const expiryDate = new Date(dateMatch[1])
             if (!isNaN(expiryDate.getTime())) {
-              // Set minimum date to the day after expiry
               const nextDay = new Date(expiryDate)
               nextDay.setDate(nextDay.getDate() + 1)
               setMinDate(nextDay)
             } else {
-              // If date parsing fails, set to tomorrow
               setDefaultMinDate()
             }
           } catch (error) {
@@ -60,23 +49,19 @@ export default function Step4() {
             setDefaultMinDate()
           }
         } else {
-          // If no date found in description, set to tomorrow
           setDefaultMinDate()
         }
       } catch (error) {
         console.error("Error parsing settings:", error)
-        // Set default values if there's an error
         setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
         setDefaultMinDate()
       }
     } else {
-      // Set default values if no settings found
       setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
       setDefaultMinDate()
     }
   }, [])
 
-  // Helper function to set default minimum date (tomorrow)
   const setDefaultMinDate = () => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -86,13 +71,8 @@ export default function Step4() {
   const handleSubmit = async (values: any, { resetForm }: { resetForm: () => void }) => {
     setIsSubmitting(true)
     try {
-      // Update store with step 4 data
       updateFormData(values)
-      
-      // Reset form fields
       resetForm()
-      
-      // Navigate to next step
       router.push("/apply/step5")
     } catch (error) {
       console.error("Error submitting form:", error)
@@ -116,14 +96,16 @@ export default function Step4() {
 
         <Formik
           initialValues={{
-            tourDate: formData.tourDate ? new Date(formData.tourDate) : null,
+            tourDate: formData.tourDate
+              ? new Date(formData.tourDate).toISOString().split("T")[0]
+              : minDate?.toISOString().split("T")[0] || "",
             tourTime: formData.tourTime || ""
           }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
-          enableReinitialize={false}
+          enableReinitialize={true}
         >
-          {({ errors, touched, setFieldValue, values }) => (
+          {({ errors, touched }) => (
             <Form className="space-y-8">
               <Card className="shadow-sm border border-slate-200">
                 <CardHeader className="bg-white border-b border-slate-200">
@@ -158,7 +140,7 @@ export default function Step4() {
                             id="tourDate"
                             name="tourDate"
                             type="date"
-                            min={minDate?.toISOString().split('T')[0]}
+                            min={minDate?.toISOString().split("T")[0]}
                             className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
                               errors.tourDate && touched.tourDate ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
                             }`}
@@ -227,4 +209,4 @@ export default function Step4() {
       </div>
     </motion.div>
   )
-} 
+}
