@@ -40,6 +40,7 @@ export default function Step4() {
             if (!isNaN(expiryDate.getTime())) {
               const nextDay = new Date(expiryDate)
               nextDay.setDate(nextDay.getDate() + 1)
+              nextDay.setFullYear(2025)
               setMinDate(nextDay)
             } else {
               setDefaultMinDate()
@@ -65,6 +66,7 @@ export default function Step4() {
   const setDefaultMinDate = () => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setFullYear(2025)
     setMinDate(tomorrow)
   }
 
@@ -98,7 +100,9 @@ export default function Step4() {
           initialValues={{
             tourDate: formData.tourDate
               ? new Date(formData.tourDate).toISOString().split("T")[0]
-              : minDate?.toISOString().split("T")[0] || "",
+              : minDate
+                ? new Date(2025, minDate.getMonth(), minDate.getDate()).toISOString().split("T")[0]
+                : "",
             tourTime: formData.tourTime || ""
           }}
           validationSchema={validationSchema}
@@ -141,6 +145,15 @@ export default function Step4() {
                             name="tourDate"
                             type="date"
                             min={minDate?.toISOString().split("T")[0]}
+                            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                              // Prevent the default calendar popup
+                              e.target.showPicker = () => {
+                                const date = new Date(e.target.value || minDate?.toISOString().split("T")[0] || "");
+                                if (date < minDate!) {
+                                  e.target.value = minDate!.toISOString().split("T")[0];
+                                }
+                              };
+                            }}
                             className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
                               errors.tourDate && touched.tourDate ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
                             }`}
