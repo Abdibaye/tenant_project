@@ -1,5 +1,6 @@
 "use client"
 
+import React from 'react'
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -7,415 +8,247 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-interface Settings {
-  tourDateNote: string
-  zelleEmail: string
-  zelleName: string
-  cashAppTag: string
-  tourDateDescription: string
-  paymentInstructions: {
-    zelle: {
-      email: string
-      name: string
-    }
-    cashApp: {
-      cashtag: string
-    }
-    applicationFee: number
-    refundAmount: number
-  }
-}
+import { getApplicationSettings, updateApplicationSettings, type ApplicationSettings } from "@/lib/settings"
+import { getSession, signOut } from "@/lib/auth"
+import { getSettings } from "@/lib/settings"
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [settings, setSettings] = useState<Settings>({
+  const [settings, setSettings] = useState<ApplicationSettings>({
     tourDateNote: "",
     zelleEmail: "",
     zelleName: "",
     cashAppTag: "",
-    tourDateDescription: "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.",
+    tourDateDescription: "",
     paymentInstructions: {
       zelle: {
-        email: "Guywell90@yahoo.com",
-        name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
+        email: "",
+        name: ""
       },
       cashApp: {
-        cashtag: "Coming soon"
+        cashtag: ""
       },
-      applicationFee: 99,
-      refundAmount: 75
+      applicationFee: 0,
+      refundAmount: 0
     }
   })
   const [saved, setSaved] = useState(false)
-  const [credentialsForm, setCredentialsForm] = useState({
-    currentEmail: "",
-    newEmail: "",
-    currentPassword: "",
-    newPassword: ""
-  })
-  const [credentialsMessage, setCredentialsMessage] = useState("")
-  const [credentialsError, setCredentialsError] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if admin is authenticated
-    const isAuthenticated = localStorage.getItem("adminAuthenticated")
-    if (!isAuthenticated) {
-      router.push("/admin/login")
-      return
+    const checkAuth = async () => {
+      const session = await getSession()
+      if (!session) {
+        router.push("/admin/login")
+        return
+      }
+
+      try {
+        const currentSettings = await getSettings()
+        // Initialize Zelle and Cash App fields from payment instructions
+        setSettings({
+          ...currentSettings,
+          zelleEmail: currentSettings.paymentInstructions.zelle.email,
+          zelleName: currentSettings.paymentInstructions.zelle.name,
+          cashAppTag: currentSettings.paymentInstructions.cashApp.cashtag
+        })
+      } catch (error) {
+        console.error("Error loading settings:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    // Load saved settings
-    const savedSettings = localStorage.getItem("applicationSettings")
-    if (savedSettings) {
-      const parsedSettings = JSON.parse(savedSettings)
-      // Ensure paymentInstructions exists in the loaded settings
-      setSettings({
-        ...parsedSettings,
-        paymentInstructions: parsedSettings.paymentInstructions || {
-          zelle: {
-            email: "Guywell90@yahoo.com",
-            name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
-          },
-          cashApp: {
-            cashtag: "Coming soon"
-          },
-          applicationFee: 0,
-          refundAmount: 150
-        }
-      })
-    }
+    checkAuth()
   }, [router])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Ensure paymentInstructions is included when saving
-    const settingsToSave = {
-      ...settings,
-      paymentInstructions: settings.paymentInstructions || {
-        zelle: {
-          email: "Guywell90@yahoo.com",
-          name: "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
-        },
-        cashApp: {
-          cashtag: "Coming soon"
-        },
-        applicationFee: 0,
-        refundAmount: 150
-      }
-    }
-    localStorage.setItem("applicationSettings", JSON.stringify(settingsToSave))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }
-
-  const handleCredentialsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setCredentialsMessage("")
-    setCredentialsError("")
+    setIsLoading(true)
 
     try {
-      const response = await fetch("/api/admin/update-credentials", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(credentialsForm),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setCredentialsMessage("Credentials updated successfully")
-        setCredentialsForm({
-          currentEmail: "",
-          newEmail: "",
-          currentPassword: "",
-          newPassword: ""
-        })
-      } else {
-        setCredentialsError(data.message || "Failed to update credentials")
+      // Update payment instructions with current Zelle and Cash App information
+      const updatedSettings = {
+        ...settings,
+        paymentInstructions: {
+          ...settings.paymentInstructions,
+          zelle: {
+            email: settings.zelleEmail,
+            name: settings.zelleName
+          },
+          cashApp: {
+            cashtag: settings.cashAppTag
+          }
+        }
       }
-    } catch (err) {
-      setCredentialsError("An error occurred while updating credentials")
+
+      // Save the updated settings
+      await updateApplicationSettings(updatedSettings)
+      
+      // Wait a moment to ensure the database has updated
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Refresh the settings to ensure we have the latest data
+      const currentSettings = await getSettings()
+      
+      // Update the state with the latest settings
+      setSettings(prevSettings => ({
+        ...currentSettings,
+        zelleEmail: currentSettings.zelleEmail,
+        zelleName: currentSettings.zelleName,
+        cashAppTag: currentSettings.cashAppTag
+      }))
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (error) {
+      console.error("Error saving settings:", error)
+      alert("Failed to save settings. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminAuthenticated")
-    router.push("/admin/login")
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      router.push("/admin/login")
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="border-slate-200 hover:bg-slate-50"
-          >
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <Button onClick={handleLogout} variant="outline">
             Logout
           </Button>
         </div>
 
-        {/* Admin Credentials Card */}
-        <Card className="shadow-sm border border-slate-200 mb-8">
-          <CardHeader className="bg-white border-b border-slate-200">
-            <CardTitle className="text-xl text-slate-900">Admin Credentials</CardTitle>
-            <CardDescription className="text-slate-600">
-              Update your admin email and password
+        <Card>
+          <CardHeader>
+            <CardTitle>Application Settings</CardTitle>
+            <CardDescription>
+              Update the application settings and payment information
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleCredentialsSubmit} className="space-y-4">
-              {credentialsMessage && (
-                <div className="p-4 bg-green-50 text-green-700 rounded-md">
-                  {credentialsMessage}
-                </div>
-              )}
-              {credentialsError && (
-                <div className="p-4 bg-red-50 text-red-700 rounded-md">
-                  {credentialsError}
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentEmail" className="text-slate-700">Current Email</Label>
-                  <Input
-                    id="currentEmail"
-                    type="email"
-                    value={credentialsForm.currentEmail}
-                    onChange={(e) => setCredentialsForm({ ...credentialsForm, currentEmail: e.target.value })}
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newEmail" className="text-slate-700">New Email</Label>
-                  <Input
-                    id="newEmail"
-                    type="email"
-                    value={credentialsForm.newEmail}
-                    onChange={(e) => setCredentialsForm({ ...credentialsForm, newEmail: e.target.value })}
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword" className="text-slate-700">Current Password</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={credentialsForm.currentPassword}
-                    onChange={(e) => setCredentialsForm({ ...credentialsForm, currentPassword: e.target.value })}
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-slate-700">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={credentialsForm.newPassword}
-                    onChange={(e) => setCredentialsForm({ ...credentialsForm, newPassword: e.target.value })}
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  className="bg-slate-900 hover:bg-slate-800 text-white"
-                >
-                  Update Credentials
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Application Settings Card */}
-        <Card className="shadow-sm border border-slate-200">
-          <CardHeader className="bg-white border-b border-slate-200">
-            <CardTitle className="text-xl text-slate-900">Application Settings</CardTitle>
-            <CardDescription className="text-slate-600">
-              Update the application form settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Tour Date Settings */}
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900">Tour Date Settings</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="tourDateNote" className="text-slate-700">Tour Date Note</Label>
+                <div>
+                  <Label htmlFor="tourDateNote">Tour Date Note</Label>
                   <Textarea
                     id="tourDateNote"
                     value={settings.tourDateNote}
-                    onChange={(e) => setSettings({ ...settings, tourDateNote: e.target.value })}
-                    placeholder="Enter the note to display for tour date selection"
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    rows={3}
+                    onChange={(e) =>
+                      setSettings({ ...settings, tourDateNote: e.target.value })
+                    }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tourDateDescription" className="text-slate-700">Tour Date Description</Label>
+
+                <div>
+                  <Label htmlFor="tourDateDescription">Tour Date Description</Label>
                   <Textarea
                     id="tourDateDescription"
                     value={settings.tourDateDescription}
-                    onChange={(e) => setSettings({ ...settings, tourDateDescription: e.target.value })}
-                    placeholder="Enter the description for tour date selection"
-                    className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                    rows={3}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        tourDateDescription: e.target.value,
+                      })
+                    }
                   />
                 </div>
-              </div>
 
-              {/* Payment Settings */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900">Payment Settings</h3>
-                <div className="space-y-6">
-                  {/* Application Fee */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-slate-700">Application Fee</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="applicationFee" className="text-slate-700">Application Fee Amount ($)</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
-                        <Input
-                          id="applicationFee"
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={settings.paymentInstructions.applicationFee}
-                          onChange={(e) => setSettings({
-                            ...settings,
-                            paymentInstructions: {
-                              ...settings.paymentInstructions,
-                              applicationFee: parseInt(e.target.value) || 0
-                            }
-                          })}
-                          placeholder="Enter application fee amount"
-                          className="pl-7 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                        />
-                      </div>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="zelleEmail">Zelle Email</Label>
+                    <Input
+                      id="zelleEmail"
+                      value={settings.zelleEmail}
+                      onChange={(e) =>
+                        setSettings({ ...settings, zelleEmail: e.target.value })
+                      }
+                    />
                   </div>
-
-                  {/* Refund Amount */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-slate-700">Refund Amount</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="refundAmount" className="text-slate-700">Refund Amount ($)</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
-                        <Input
-                          id="refundAmount"
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={settings.paymentInstructions.refundAmount}
-                          onChange={(e) => setSettings({
-                            ...settings,
-                            paymentInstructions: {
-                              ...settings.paymentInstructions,
-                              refundAmount: parseInt(e.target.value) || 0
-                            }
-                          })}
-                          placeholder="Enter refund amount"
-                          className="pl-7 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                        />
-                      </div>
-                      <p className="text-sm text-slate-500">Amount to be refunded if application is denied</p>
-                    </div>
+                  <div>
+                    <Label htmlFor="zelleName">Zelle Name</Label>
+                    <Input
+                      id="zelleName"
+                      value={settings.zelleName}
+                      onChange={(e) =>
+                        setSettings({ ...settings, zelleName: e.target.value })
+                      }
+                    />
                   </div>
+                </div>
 
-                  {/* Zelle Settings */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-slate-700">Zelle Payment Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="zellePaymentEmail" className="text-slate-700">Zelle Email</Label>
-                        <Input
-                          id="zellePaymentEmail"
-                          type="email"
-                          value={settings.paymentInstructions.zelle.email}
-                          onChange={(e) => setSettings({
-                            ...settings,
-                            paymentInstructions: {
-                              ...settings.paymentInstructions,
-                              zelle: {
-                                ...settings.paymentInstructions.zelle,
-                                email: e.target.value
-                              }
-                            }
-                          })}
-                          placeholder="Enter Zelle payment email"
-                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="zellePaymentName" className="text-slate-700">Zelle Name</Label>
-                        <Input
-                          id="zellePaymentName"
-                          type="text"
-                          value={settings.paymentInstructions.zelle.name}
-                          onChange={(e) => setSettings({
-                            ...settings,
-                            paymentInstructions: {
-                              ...settings.paymentInstructions,
-                              zelle: {
-                                ...settings.paymentInstructions.zelle,
-                                name: e.target.value
-                              }
-                            }
-                          })}
-                          placeholder="Enter Zelle payment name"
-                          className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <Label htmlFor="cashAppTag">Cash App Tag</Label>
+                  <Input
+                    id="cashAppTag"
+                    value={settings.cashAppTag}
+                    onChange={(e) =>
+                      setSettings({ ...settings, cashAppTag: e.target.value })
+                    }
+                  />
+                </div>
 
-                  {/* Cash App Settings */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-slate-700">Cash App Payment Information</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="cashAppCashtag" className="text-slate-700">Cash App $Cashtag</Label>
-                      <Input
-                        id="cashAppCashtag"
-                        value={settings.paymentInstructions.cashApp.cashtag}
-                        onChange={(e) => setSettings({
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="applicationFee">Application Fee</Label>
+                    <Input
+                      id="applicationFee"
+                      type="number"
+                      value={settings.paymentInstructions.applicationFee}
+                      onChange={(e) =>
+                        setSettings({
                           ...settings,
                           paymentInstructions: {
                             ...settings.paymentInstructions,
-                            cashApp: {
-                              ...settings.paymentInstructions.cashApp,
-                              cashtag: e.target.value
-                            }
-                          }
-                        })}
-                        placeholder="Enter Cash App $Cashtag"
-                        className="border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                      />
-                    </div>
+                            applicationFee: Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="refundAmount">Refund Amount</Label>
+                    <Input
+                      id="refundAmount"
+                      type="number"
+                      value={settings.paymentInstructions.refundAmount}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          paymentInstructions: {
+                            ...settings.paymentInstructions,
+                            refundAmount: Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-4">
-                {saved && (
-                  <p className="text-sm text-green-600">Settings saved successfully!</p>
-                )}
-                <Button
-                  type="submit"
-                  className="bg-slate-900 hover:bg-slate-800 text-white"
-                >
-                  Save Changes
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Saving..." : saved ? "Saved!" : "Save Changes"}
                 </Button>
               </div>
             </form>

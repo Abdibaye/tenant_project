@@ -60,7 +60,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
                 onClick={() => router.push('/apply/step1')}
-                className="bg-white text-slate-900 hover:bg-slate-100 text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
+                className="bg-white hover:bg-slate-100 text-black text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
               >
                 Start your application & schedule your tour
               </Button>

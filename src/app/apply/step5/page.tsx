@@ -13,6 +13,7 @@ import { motion } from "framer-motion"
 import { Loader2, CreditCard, Receipt, DollarSign } from "lucide-react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
+import { getSettings } from "@/lib/settings"
 
 const validationSchema = Yup.object().shape({
   paymentMethod: Yup.string()
@@ -46,14 +47,26 @@ export default function Step5() {
   })
 
   useEffect(() => {
-    // Load settings from localStorage
-    const savedSettings = localStorage.getItem("applicationSettings")
-    if (savedSettings) {
+    // Load settings using the new getSettings function
+    const loadSettings = async () => {
       try {
-        const settings = JSON.parse(savedSettings)
-        
-        // Ensure payment instructions exist with default values
-        const defaultPaymentInfo = {
+        const settings = await getSettings()
+        // Update payment info with the latest settings
+        setPaymentInfo({
+          applicationFee: settings.paymentInstructions.applicationFee || 99,
+          refundAmount: settings.paymentInstructions.refundAmount || 75,
+          zelle: {
+            email: settings.zelleEmail || settings.paymentInstructions.zelle.email || "Guywell90@yahoo.com",
+            name: settings.zelleName || settings.paymentInstructions.zelle.name || "INDEPENDENT STEEL COMPANY, LLC (Our Parent Company)"
+          },
+          cashApp: {
+            cashtag: settings.cashAppTag || settings.paymentInstructions.cashApp.cashtag || "Coming soon"
+          }
+        })
+      } catch (error) {
+        console.error("Error loading settings:", error)
+        // Fallback to default payment info if there's an error
+        setPaymentInfo({
           applicationFee: 99,
           refundAmount: 75,
           zelle: {
@@ -63,13 +76,11 @@ export default function Step5() {
           cashApp: {
             cashtag: "Coming soon"
           }
-        }
-        
-        setPaymentInfo(settings.paymentInstructions || defaultPaymentInfo)
-      } catch (error) {
-        console.error("Error parsing settings:", error)
+        })
       }
     }
+
+    loadSettings()
   }, [])
 
   const handleSubmit = async (values: any, { resetForm }: { resetForm: () => void }) => {
