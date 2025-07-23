@@ -338,7 +338,7 @@ export default function Step5() {
                     <Button
                       type="submit"
                       className="bg-slate-900 hover:bg-slate-800 text-white min-w-[120px]"
-                      disabled={isSubmitting || (values.paymentMethod === "godaddy" && !!godaddyPayLink)}
+                      disabled={isSubmitting || (values.paymentMethod === "godaddy" && !godaddyPayLink)}
                     >
                       {isSubmitting ? (
                         <>
