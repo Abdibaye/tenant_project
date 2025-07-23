@@ -17,6 +17,10 @@ export interface ApplicationSettings {
     applicationFee: number
     refundAmount: number
   }
+  godaddyPaymentEnabled?: boolean
+  godaddyPayLink?: string
+  cashAppEnabled?: boolean
+  zelleEnabled?: boolean
 }
 
 const defaultSettings: ApplicationSettings = {
@@ -35,7 +39,11 @@ const defaultSettings: ApplicationSettings = {
     },
     applicationFee: 0,
     refundAmount: 0
-  }
+  },
+  godaddyPaymentEnabled: false,
+  godaddyPayLink: "",
+  cashAppEnabled: true,
+  zelleEnabled: true
 }
 
 export async function getApplicationSettings(): Promise<ApplicationSettings> {
@@ -63,7 +71,11 @@ export async function getApplicationSettings(): Promise<ApplicationSettings> {
           zelle_name: defaultSettings.zelleName,
           cash_app_tag: defaultSettings.cashAppTag,
           tour_date_description: defaultSettings.tourDateDescription,
-          payment_instructions: defaultSettings.paymentInstructions
+          payment_instructions: defaultSettings.paymentInstructions,
+          godaddy_payment_enabled: defaultSettings.godaddyPaymentEnabled,
+          godaddy_pay_link: defaultSettings.godaddyPayLink,
+          cash_app_enabled: defaultSettings.cashAppEnabled,
+          zelle_enabled: defaultSettings.zelleEnabled
         }])
 
       if (insertError) {
@@ -81,7 +93,11 @@ export async function getApplicationSettings(): Promise<ApplicationSettings> {
       zelleName: data.zelle_name || "",
       cashAppTag: data.cash_app_tag || "",
       tourDateDescription: data.tour_date_description || "",
-      paymentInstructions: data.payment_instructions || defaultSettings.paymentInstructions
+      paymentInstructions: data.payment_instructions || defaultSettings.paymentInstructions,
+      godaddyPaymentEnabled: data.godaddy_payment_enabled || defaultSettings.godaddyPaymentEnabled,
+      godaddyPayLink: data.godaddy_pay_link || defaultSettings.godaddyPayLink,
+      cashAppEnabled: data.cash_app_enabled || defaultSettings.cashAppEnabled,
+      zelleEnabled: data.zelle_enabled || defaultSettings.zelleEnabled
     }
   } catch (error) {
     console.error('Error fetching settings:', error)
@@ -125,7 +141,11 @@ export async function updateApplicationSettings(settings: ApplicationSettings) {
             },
             applicationFee: settings.paymentInstructions.applicationFee,
             refundAmount: settings.paymentInstructions.refundAmount
-          }
+          },
+          godaddy_payment_enabled: settings.godaddyPaymentEnabled,
+          godaddy_pay_link: settings.godaddyPayLink,
+          cash_app_enabled: settings.cashAppEnabled,
+          zelle_enabled: settings.zelleEnabled
         })
         .eq('id', latestSettings.id)
 
@@ -150,7 +170,11 @@ export async function updateApplicationSettings(settings: ApplicationSettings) {
             },
             applicationFee: settings.paymentInstructions.applicationFee,
             refundAmount: settings.paymentInstructions.refundAmount
-          }
+          },
+          godaddy_payment_enabled: settings.godaddyPaymentEnabled,
+          godaddy_pay_link: settings.godaddyPayLink,
+          cash_app_enabled: settings.cashAppEnabled,
+          zelle_enabled: settings.zelleEnabled
         }])
 
       updateError = error;
@@ -208,7 +232,11 @@ export async function getSettings(): Promise<ApplicationSettings> {
         },
         applicationFee: data.payment_instructions?.applicationFee || 99,
         refundAmount: data.payment_instructions?.refundAmount || 75
-      }
+      },
+      godaddyPaymentEnabled: data.godaddy_payment_enabled ?? defaultSettings.godaddyPaymentEnabled,
+      godaddyPayLink: data.godaddy_pay_link ?? defaultSettings.godaddyPayLink,
+      cashAppEnabled: data.cash_app_enabled ?? defaultSettings.cashAppEnabled,
+      zelleEnabled: data.zelle_enabled ?? defaultSettings.zelleEnabled
     }
 
     // Update localStorage with the latest settings

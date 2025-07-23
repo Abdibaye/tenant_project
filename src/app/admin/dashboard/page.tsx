@@ -1,7 +1,6 @@
 "use client"
 
-import React from 'react'
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +29,11 @@ export default function AdminDashboard() {
       },
       applicationFee: 0,
       refundAmount: 0
-    }
+    },
+    zelleEnabled: false,
+    cashAppEnabled: false,
+    godaddyPaymentEnabled: false,
+    godaddyPayLink: ""
   })
   const [saved, setSaved] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -45,13 +48,17 @@ export default function AdminDashboard() {
 
       try {
         const currentSettings = await getSettings()
-        // Initialize Zelle and Cash App fields from payment instructions
-        setSettings({
+        setSettings(prevSettings => ({
+          ...prevSettings,
           ...currentSettings,
-          zelleEmail: currentSettings.paymentInstructions.zelle.email,
-          zelleName: currentSettings.paymentInstructions.zelle.name,
-          cashAppTag: currentSettings.paymentInstructions.cashApp.cashtag
-        })
+          zelleEmail: currentSettings.paymentInstructions?.zelle?.email || "",
+          zelleName: currentSettings.paymentInstructions?.zelle?.name || "",
+          cashAppTag: currentSettings.paymentInstructions?.cashApp?.cashtag || "",
+          zelleEnabled: currentSettings.zelleEnabled ?? prevSettings.zelleEnabled,
+          cashAppEnabled: currentSettings.cashAppEnabled ?? prevSettings.cashAppEnabled,
+          godaddyPaymentEnabled: currentSettings.godaddyPaymentEnabled ?? prevSettings.godaddyPaymentEnabled,
+          godaddyPayLink: currentSettings.godaddyPayLink ?? prevSettings.godaddyPayLink,
+        }))
       } catch (error) {
         console.error("Error loading settings:", error)
       } finally {
@@ -84,19 +91,19 @@ export default function AdminDashboard() {
 
       // Save the updated settings
       await updateApplicationSettings(updatedSettings)
-      
-      // Wait a moment to ensure the database has updated
       await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Refresh the settings to ensure we have the latest data
       const currentSettings = await getSettings()
-      
-      // Update the state with the latest settings
+
       setSettings(prevSettings => ({
+        ...prevSettings,
         ...currentSettings,
-        zelleEmail: currentSettings.zelleEmail,
-        zelleName: currentSettings.zelleName,
-        cashAppTag: currentSettings.cashAppTag
+        zelleEmail: currentSettings.paymentInstructions?.zelle?.email || "",
+        zelleName: currentSettings.paymentInstructions?.zelle?.name || "",
+        cashAppTag: currentSettings.paymentInstructions?.cashApp?.cashtag || "",
+        zelleEnabled: currentSettings.zelleEnabled ?? prevSettings.zelleEnabled,
+        cashAppEnabled: currentSettings.cashAppEnabled ?? prevSettings.cashAppEnabled,
+        godaddyPaymentEnabled: currentSettings.godaddyPaymentEnabled ?? prevSettings.godaddyPaymentEnabled,
+        godaddyPayLink: currentSettings.godaddyPayLink ?? prevSettings.godaddyPayLink,
       }))
 
       setSaved(true)
@@ -149,6 +156,45 @@ export default function AdminDashboard() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!settings.godaddyPaymentEnabled}
+                      onChange={e => setSettings(s => ({ ...s, godaddyPaymentEnabled: e.target.checked }))}
+                      className="accent-blue-600 w-5 h-5"
+                    />
+                    <span className="text-slate-700 font-medium">Enable GoDaddy Pay Link</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="GoDaddy Pay Link URL"
+                    value={settings.godaddyPayLink || ''}
+                    onChange={e => setSettings(s => ({ ...s, godaddyPayLink: e.target.value }))}
+                    className="border border-slate-200 rounded px-3 py-2 w-full max-w-md"
+                    disabled={!settings.godaddyPaymentEnabled}
+                  />
+                </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!settings.zelleEnabled}
+                      onChange={e => setSettings(s => ({ ...s, zelleEnabled: e.target.checked }))}
+                      className="accent-blue-600 w-5 h-5"
+                    />
+                    <span className="text-slate-700 font-medium">Enable Zelle</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!settings.cashAppEnabled}
+                      onChange={e => setSettings(s => ({ ...s, cashAppEnabled: e.target.checked }))}
+                      className="accent-blue-600 w-5 h-5"
+                    />
+                    <span className="text-slate-700 font-medium">Enable Cash App</span>
+                  </label>
+                </div>
                 <div>
                   <Label htmlFor="tourDateNote">Tour Date Note</Label>
                   <Textarea
@@ -257,4 +303,4 @@ export default function AdminDashboard() {
       </div>
     </div>
   )
-} 
+}

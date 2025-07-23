@@ -12,6 +12,7 @@ import { motion } from "framer-motion"
 import { Loader2, Calendar as CalendarIcon, Clock } from "lucide-react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
+import { getSettings } from "@/lib/settings"
 
 const validationSchema = Yup.object().shape({
   tourDate: Yup.string().required("Tour date is required"),
@@ -26,47 +27,41 @@ export default function Step4() {
   const [minDate, setMinDate] = useState<Date | undefined>(undefined)
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem("applicationSettings")
-    if (savedSettings) {
+    async function loadSettings() {
       try {
-        const settings = JSON.parse(savedSettings)
+        const settings = await getSettings()
         const description = settings.tourDateDescription || "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date."
         setTourDateDescription(description)
-
+        // Optionally, parse a date from the description if you want to set minDate dynamically:
         const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2})/i)
         if (dateMatch) {
           try {
-            const expiryDate = new Date(dateMatch[1])
+            const expiryDate = new Date(`${dateMatch[1]}, ${new Date().getFullYear()}`)
             if (!isNaN(expiryDate.getTime())) {
               const nextDay = new Date(expiryDate)
               nextDay.setDate(nextDay.getDate() + 1)
-              nextDay.setFullYear(2025)
               setMinDate(nextDay)
             } else {
               setDefaultMinDate()
             }
-          } catch (error) {
-            console.error("Error parsing date:", error)
+          } catch {
             setDefaultMinDate()
           }
         } else {
           setDefaultMinDate()
         }
       } catch (error) {
-        console.error("Error parsing settings:", error)
         setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
         setDefaultMinDate()
       }
-    } else {
-      setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
-      setDefaultMinDate()
     }
+    loadSettings()
+    // eslint-disable-next-line
   }, [])
 
   const setDefaultMinDate = () => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
-    tomorrow.setFullYear(2025)
     setMinDate(tomorrow)
   }
 
@@ -101,7 +96,7 @@ export default function Step4() {
             tourDate: formData.tourDate
               ? new Date(formData.tourDate).toISOString().split("T")[0]
               : minDate
-                ? new Date(2025, minDate.getMonth(), minDate.getDate()).toISOString().split("T")[0]
+                ? minDate.toISOString().split("T")[0]
                 : "",
             tourTime: formData.tourTime || ""
           }}
@@ -145,15 +140,6 @@ export default function Step4() {
                             name="tourDate"
                             type="date"
                             min={minDate?.toISOString().split("T")[0]}
-                            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                              // Prevent the default calendar popup
-                              e.target.showPicker = () => {
-                                const date = new Date(e.target.value || minDate?.toISOString().split("T")[0] || "");
-                                if (date < minDate!) {
-                                  e.target.value = minDate!.toISOString().split("T")[0];
-                                }
-                              };
-                            }}
                             className={`border-slate-200 focus:border-slate-400 focus:ring-slate-400 ${
                               errors.tourDate && touched.tourDate ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
                             }`}
