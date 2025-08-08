@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
     // 1. Send application data to admin
     const userApplicationEmail = {
-      from: `"Pinnacle Property Management" <${process.env.ZOHO_EMAIL}>`,
+      from: `"PrimeVista Property Management" <${process.env.ZOHO_EMAIL}>`,
       to: process.env.EMAIL_USER,
       subject: 'New Rental Application Received',
       headers: commonHeaders,
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
         - Payment Method: ${formData.paymentMethod || 'Not provided'}
         ${formData.paymentReceipt ? '- Payment Receipt: Attached' : ''}
       `,
-      html: `
+  html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1e293b;">New Rental Application</h2>
           
@@ -172,12 +172,12 @@ export async function POST(request: Request) {
           </div>
         </div>
       `,
-      attachments
-    }
+  attachments
+}
 
     // 2. Send confirmation with access code to user
     const userConfirmationEmail = {
-      from: `"Pinnacle Property Management" <${process.env.ZOHO_EMAIL}>`,
+      from: `"PrimeVista Property Management" <${process.env.ZOHO_EMAIL}>`,
       to: formData.email,
       subject: 'Application Confirmation and Access Code',
       headers: commonHeaders,
@@ -201,9 +201,9 @@ export async function POST(request: Request) {
         We will review your application within 1-3 business days. If you have any questions, please don't hesitate to contact us.
 
         Best regards,
-        Property Management Team
+        PrimeVista Property Management Team
       `,
-      html: `
+  html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1e293b;">Application Confirmation</h2>
           
@@ -246,7 +246,7 @@ export async function POST(request: Request) {
             </p>
             <p style="color: #334155; font-size: 16px; line-height: 1.6; margin-top: 20px;">
               Best regards,<br>
-              Property Management Team
+              PrimeVista Property Management Team
             </p>
           </div>
         </div>
@@ -289,4 +289,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}

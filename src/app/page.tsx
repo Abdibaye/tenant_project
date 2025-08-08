@@ -17,7 +17,7 @@ export default function LandingPage() {
             <div className="flex items-center">
               <Image
                 src="/logo.png"
-                alt="Pinnacle Property Management"
+                alt="PrimeVista Property Management"
                 width={120}
                 height={110}
                 className="py-1"
@@ -222,7 +222,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-slate-200 text-center text-slate-600">
-            <p>&copy; {new Date().getFullYear()} Pinnacle Properties. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} PrimeVista Property Management. All rights reserved.</p>
           </div>
         </div>
       </footer>

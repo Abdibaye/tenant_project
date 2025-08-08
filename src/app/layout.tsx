@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Property Management App",
-  description: "Property Management Application",
+  title: "PrimeVista Property Management",
+  description: "PrimeVista Property Management Application",
 };
 
 export default function RootLayout({
