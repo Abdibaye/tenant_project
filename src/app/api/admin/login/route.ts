@@ -5,8 +5,8 @@ export async function POST(request: Request) {
     const { email, password } = await request.json()
 
     // Get admin credentials from environment variables
-    const adminEmail = process.env.ADMIN_EMAIL
-    const adminPassword = process.env.ADMIN_PASSWORD
+    const adminEmail = process.env.ADMIN_EMAIL || ""
+    const adminPassword = process.env.ADMIN_PASSWORD || ""
 
     // Simple credential check
     if (email === adminEmail && password === adminPassword) {
