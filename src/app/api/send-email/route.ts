@@ -191,8 +191,7 @@ export async function POST(request: Request) {
         Your unique access code is: ${accessCode}
 
         For faster processing, please send the following documents to rental@pprmgt.com:
-        - Last 3 months' paystubs
-        - Any valid government ID (front & back)
+        - Most recent W2 and Any valid government ID (front & back clear pictures)
 
         Tour Details:
         - Date: ${formData.tourDate || 'Not provided'}
@@ -227,8 +226,7 @@ export async function POST(request: Request) {
               For faster processing, please send the following documents to <a href="mailto:rental@pprmgt.com" style="color: #2563eb;">rental@pprmgt.com</a>:
             </p>
             <ul style="color: #334155; font-size: 16px; line-height: 1.6; padding-left: 20px;">
-              <li>Last 3 months' paystubs</li>
-              <li>Any valid government ID (front & back)</li>
+              <li>Most recent W2 and Any valid government ID (front & back clear pictures)</li>
             </ul>
           </div>
 
