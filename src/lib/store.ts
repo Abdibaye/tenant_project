@@ -8,6 +8,7 @@ interface FormData {
   email: string
   phoneNumber: string
   currentAddress: string
+  smsConsent: boolean
 
   // Step 2 - Financial Information
   monthlyIncome: string
@@ -54,6 +55,7 @@ const initialFormData: FormData = {
   email: "",
   phoneNumber: "",
   currentAddress: "",
+  smsConsent: false,
 
   // Step 2
   monthlyIncome: "",

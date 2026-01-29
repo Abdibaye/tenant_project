@@ -10,7 +10,8 @@ import { useApplicationStore } from "@/lib/store"
 import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
 import { Loader2 } from "lucide-react"
-import { Formik, Form, Field, ErrorMessage } from "formik"
+import { Formik, Form, Field, ErrorMessage, FieldProps } from "formik"
+import { Checkbox } from "@/components/ui/checkbox"
 import * as Yup from "yup"
 
 const validationSchema = Yup.object().shape({
@@ -28,7 +29,9 @@ const validationSchema = Yup.object().shape({
     .required("Phone number is required"),
   currentAddress: Yup.string()
     .required("Current address is required")
-    .min(5, "Address must be at least 5 characters")
+    .min(5, "Address must be at least 5 characters"),
+  smsConsent: Yup.boolean()
+    .oneOf([true], "You must consent to receive text messages")
 })
 
 export default function Step1() {
@@ -83,13 +86,14 @@ export default function Step1() {
                 fullName: formData.fullName || "",
                 email: formData.email || "",
                 phoneNumber: formData.phoneNumber || "",
-                currentAddress: formData.currentAddress || ""
+                currentAddress: formData.currentAddress || "",
+                smsConsent: formData.smsConsent || false
               }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
               enableReinitialize={false}
             >
-              {({ errors, touched }) => (
+              {({ errors, touched, values }) => (
                 <Form className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -185,11 +189,46 @@ export default function Step1() {
                     </div>
                   </div>
 
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-start space-x-3">
+                      <Field name="smsConsent">
+                        {({ field, form }: FieldProps) => (
+                          <Checkbox
+                            id="smsConsent"
+                            checked={field.value}
+                            onCheckedChange={(checked) =>
+                              form.setFieldValue(field.name, checked === true)
+                            }
+                            aria-invalid={
+                              errors.smsConsent && touched.smsConsent ? "true" : "false"
+                            }
+                          />
+                        )}
+                      </Field>
+                      <div>
+                        <Label
+                          htmlFor="smsConsent"
+                          className="text-sm font-semibold text-slate-900"
+                        >
+                          By providing your mobile number, you consent to receive text messages from
+                          Pinnacle Property Management MGT regarding your application and related services.
+                          <br />
+                          Standard message and data rates may apply; you may reply STOP to opt out at any time.
+                        </Label>
+                      </div>
+                    </div>
+                    <ErrorMessage
+                      name="smsConsent"
+                      component="p"
+                      className="mt-2 text-sm text-red-500"
+                    />
+                  </div>
+
                   <div className="flex justify-end">
                     <Button
                       type="submit"
                       className="bg-slate-900 hover:bg-slate-800 text-white min-w-[120px]"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !values.smsConsent}
                     >
                       {isSubmitting ? (
                         <>
