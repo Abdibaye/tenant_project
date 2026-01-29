@@ -37,6 +37,16 @@ export default function Confirmation() {
                         Please check both your inbox and spam folder for our confirmation email. If you don't receive it within a day, please contact us.
                       </p>
                     </div>
+                    <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                      <p className="font-medium text-blue-900">Action needed for faster processing:</p>
+                      <p className="mt-1">
+                        Email the required documents to <a href="mailto:rental@pprmgt.com" className="underline">rental@pprmgt.com</a>:
+                      </p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5">
+                        <li>Most recent W2</li>
+                        <li>Any valid government ID (front and back, clear photos)</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
