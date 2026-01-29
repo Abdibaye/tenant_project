@@ -19,6 +19,9 @@ const validationSchema = Yup.object().shape({
   tourTime: Yup.string().required("Tour time is required")
 })
 
+const DEFAULT_TOUR_DATE_DESCRIPTION = "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date."
+const SPECIFIC_NOTICE_PHRASE = "lease expires before march 23rd"
+
 export default function Step4() {
   const router = useRouter()
   const { formData, updateFormData } = useApplicationStore()
@@ -26,12 +29,40 @@ export default function Step4() {
   const [tourDateDescription, setTourDateDescription] = useState("")
   const [minDate, setMinDate] = useState<Date | undefined>(undefined)
 
+  const setDefaultMinDate = () => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(12, 0, 0, 0)
+    setMinDate(tomorrow)
+  }
+
+  const setMarch23MinDate = () => {
+    const currentYear = new Date().getFullYear()
+    const march23 = new Date(Date.UTC(currentYear, 2, 23, 12, 0, 0, 0))
+    setMinDate(march23)
+  }
+
+  const applySpecificNoticeRestriction = (notice?: string | null) => {
+    if (!notice) return false
+    const normalizedNotice = notice
+      .toLowerCase()
+      .replace(/[\u2018\u2019]/g, "'")
+    if (normalizedNotice.includes(SPECIFIC_NOTICE_PHRASE)) {
+      setMarch23MinDate()
+      return true
+    }
+    return false
+  }
+
   useEffect(() => {
     async function loadSettings() {
       try {
         const settings = await getSettings()
-        const description = settings.tourDateDescription || "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date."
+        const description = settings.tourDateDescription || DEFAULT_TOUR_DATE_DESCRIPTION
         setTourDateDescription(description)
+        if (applySpecificNoticeRestriction(description)) {
+          return
+        }
         // Optionally, parse a date from the description if you want to set minDate dynamically:
         const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2})/i)
         if (dateMatch) {
@@ -51,19 +82,16 @@ export default function Step4() {
           setDefaultMinDate()
         }
       } catch (error) {
-        setTourDateDescription("Note: The current tenant's lease expires on July 28th. Please select a tour date after this date.")
+        setTourDateDescription(DEFAULT_TOUR_DATE_DESCRIPTION)
+        if (applySpecificNoticeRestriction(DEFAULT_TOUR_DATE_DESCRIPTION)) {
+          return
+        }
         setDefaultMinDate()
       }
     }
     loadSettings()
     // eslint-disable-next-line
   }, [])
-
-  const setDefaultMinDate = () => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    setMinDate(tomorrow)
-  }
 
   const handleSubmit = async (values: any, { resetForm }: { resetForm: () => void }) => {
     setIsSubmitting(true)
