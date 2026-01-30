@@ -25,8 +25,10 @@ const validationSchema = Yup.object().shape({
     .email("Please enter a valid email")
     .required("Email is required"),
   phoneNumber: Yup.string()
-    .matches(/^\+?[\d\s-]{10,}$/, "Please enter a valid phone number")
-    .required("Phone number is required"),
+    .matches(/^\+?[\d\s-]{10,}$/, {
+      message: "Please enter a valid phone number",
+      excludeEmptyString: true
+    }),
   currentAddress: Yup.string()
     .required("Current address is required")
     .min(5, "Address must be at least 5 characters"),
@@ -152,7 +154,7 @@ export default function Step1() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phoneNumber" className="text-slate-700">Phone Number *</Label>
+                      <Label htmlFor="phoneNumber" className="text-slate-700">Phone Number</Label>
                       <Field
                         as={Input}
                         id="phoneNumber"
