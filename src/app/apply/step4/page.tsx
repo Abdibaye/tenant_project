@@ -20,7 +20,20 @@ const validationSchema = Yup.object().shape({
 })
 
 const DEFAULT_TOUR_DATE_DESCRIPTION = "Note: The current tenant's lease expires on July 28th. Please select a tour date after this date."
-const SPECIFIC_NOTICE_PHRASE = "lease expires before march 23rd"
+const MONTH_ABBREVIATIONS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec"
+]
 
 export default function Step4() {
   const router = useRouter()
@@ -36,22 +49,52 @@ export default function Step4() {
     setMinDate(tomorrow)
   }
 
-  const setMarch23MinDate = () => {
-    const currentYear = new Date().getFullYear()
-    const march23 = new Date(Date.UTC(currentYear, 2, 23, 12, 0, 0, 0))
-    setMinDate(march23)
+  const sanitizeNotice = (notice: string) =>
+    notice
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+
+  const getMonthIndex = (monthToken: string) => {
+    if (!monthToken) return -1
+    const normalizedToken = monthToken.slice(0, 3).toLowerCase()
+    return MONTH_ABBREVIATIONS.indexOf(normalizedToken)
   }
 
-  const applySpecificNoticeRestriction = (notice?: string | null) => {
+  const createUtcDateForMonthDay = (monthIndex: number, day: number) => {
+    const currentYear = new Date().getFullYear()
+    return new Date(Date.UTC(currentYear, monthIndex, day, 12, 0, 0, 0))
+  }
+
+  const applyExpiresBeforeRestriction = (notice?: string | null) => {
     if (!notice) return false
-    const normalizedNotice = notice
-      .toLowerCase()
-      .replace(/[\u2018\u2019]/g, "'")
-    if (normalizedNotice.includes(SPECIFIC_NOTICE_PHRASE)) {
-      setMarch23MinDate()
-      return true
+    const sanitized = sanitizeNotice(notice)
+    const beforeMatch = sanitized.match(/expires\s+before\s+([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/i)
+    if (!beforeMatch) return false
+    const monthIndex = getMonthIndex(beforeMatch[1])
+    const day = parseInt(beforeMatch[2], 10)
+    if (monthIndex === -1 || Number.isNaN(day)) {
+      return false
     }
-    return false
+    setMinDate(createUtcDateForMonthDay(monthIndex, day))
+    return true
+  }
+
+  const applyExpiresOnRestriction = (notice?: string | null) => {
+    if (!notice) return false
+    const sanitized = sanitizeNotice(notice)
+    const onMatch = sanitized.match(/expires\s+on\s+([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/i)
+    if (!onMatch) return false
+    const monthIndex = getMonthIndex(onMatch[1])
+    const day = parseInt(onMatch[2], 10)
+    if (monthIndex === -1 || Number.isNaN(day)) {
+      return false
+    }
+    const baseDate = createUtcDateForMonthDay(monthIndex, day)
+    const nextDay = new Date(baseDate)
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1)
+    setMinDate(nextDay)
+    return true
   }
 
   useEffect(() => {
@@ -60,30 +103,19 @@ export default function Step4() {
         const settings = await getSettings()
         const description = settings.tourDateDescription || DEFAULT_TOUR_DATE_DESCRIPTION
         setTourDateDescription(description)
-        if (applySpecificNoticeRestriction(description)) {
+        if (applyExpiresBeforeRestriction(description)) {
           return
         }
-        // Optionally, parse a date from the description if you want to set minDate dynamically:
-        const dateMatch = description.match(/expires on ([A-Za-z]+ \d{1,2})/i)
-        if (dateMatch) {
-          try {
-            const expiryDate = new Date(`${dateMatch[1]}, ${new Date().getFullYear()}`)
-            if (!isNaN(expiryDate.getTime())) {
-              const nextDay = new Date(expiryDate)
-              nextDay.setDate(nextDay.getDate() + 1)
-              setMinDate(nextDay)
-            } else {
-              setDefaultMinDate()
-            }
-          } catch {
-            setDefaultMinDate()
-          }
-        } else {
-          setDefaultMinDate()
+        if (applyExpiresOnRestriction(description)) {
+          return
         }
+        setDefaultMinDate()
       } catch (error) {
         setTourDateDescription(DEFAULT_TOUR_DATE_DESCRIPTION)
-        if (applySpecificNoticeRestriction(DEFAULT_TOUR_DATE_DESCRIPTION)) {
+        if (applyExpiresBeforeRestriction(DEFAULT_TOUR_DATE_DESCRIPTION)) {
+          return
+        }
+        if (applyExpiresOnRestriction(DEFAULT_TOUR_DATE_DESCRIPTION)) {
           return
         }
         setDefaultMinDate()
